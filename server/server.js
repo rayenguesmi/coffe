@@ -45,6 +45,7 @@ initSocket(io);
 app.set('io', io);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
+app.set('trust proxy', 1); // Required for rate-limit behind Railway/Vercel proxy
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors(corsOptions));
 app.use(express.json());
