@@ -7,8 +7,9 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 
-const { sequelize } = require('./src/models');
+const { sequelize, ...models } = require('./src/models');
 const initSocket = require('./src/socket');
+const autoSeed = require('./src/db/autoSeed');
 
 const authRoutes = require('./src/routes/auth');
 const tableRoutes = require('./src/routes/tableRoutes');
@@ -84,11 +85,11 @@ server.listen(PORT, () => {
     .authenticate()
     .then(() => {
       console.log('✅ Connected to MySQL');
-      // En dev uniquement : sync({ alter: true }) pour créer les tables localement
-      if (process.env.NODE_ENV !== 'production') {
-        return sequelize.sync({ alter: true });
-      }
+      return sequelize.sync({ alter: false, force: false });
     })
-    .then(() => console.log('✅ Database ready'))
+    .then(async () => {
+      console.log('✅ Database ready');
+      await autoSeed(models);
+    })
     .catch((err) => console.error('❌ Database error:', err.message));
 });
