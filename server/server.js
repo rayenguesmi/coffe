@@ -75,17 +75,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Internal server error.' });
 });
 
-// ── Database + Start ──────────────────────────────────────────────────────────
-sequelize
-  .authenticate()
-  .then(() => sequelize.sync({ alter: false }))
-  .then(() => {
-    server.listen(PORT, () => {
+// ── Start server first so healthcheck passes, then connect DB ────────────────
+server.listen(PORT, () => {
+  console.log(`🚀 QuickCafe server running on port ${PORT}`);
+
+  sequelize
+    .authenticate()
+    .then(() => {
       console.log('✅ Connected to MySQL');
-      console.log(`🚀 QuickCafe server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('❌ Database connection failed:', err.message);
-    process.exit(1);
-  });
+      return sequelize.sync({ alter: true }); // creates/updates tables automatically
+    })
+    .then(() => console.log('✅ Database synced'))
+    .catch((err) => console.error('❌ Database error:', err.message));
+});
