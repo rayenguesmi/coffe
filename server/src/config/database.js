@@ -1,9 +1,10 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
-// Railway provides DATABASE_URL; local uses individual vars
-const sequelize = process.env.DATABASE_URL
-  ? new Sequelize(process.env.DATABASE_URL, {
+// Railway MySQL plugin exposes MYSQL_URL; fallback to individual vars for local
+const dbUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+const sequelize = dbUrl
+  ? new Sequelize(dbUrl, {
       dialect: 'mysql',
       logging: false,
       dialectOptions: { ssl: false },
