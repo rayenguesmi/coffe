@@ -83,8 +83,11 @@ server.listen(PORT, () => {
     .authenticate()
     .then(() => {
       console.log('✅ Connected to MySQL');
-      return sequelize.sync({ alter: true }); // creates/updates tables automatically
+      // En dev uniquement : sync({ alter: true }) pour créer les tables localement
+      if (process.env.NODE_ENV !== 'production') {
+        return sequelize.sync({ alter: true });
+      }
     })
-    .then(() => console.log('✅ Database synced'))
+    .then(() => console.log('✅ Database ready'))
     .catch((err) => console.error('❌ Database error:', err.message));
 });
