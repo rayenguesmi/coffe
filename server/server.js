@@ -22,22 +22,31 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
+// ── CORS origins ─────────────────────────────────────────────────────────────
+// Accepts comma-separated list: CLIENT_ORIGIN=https://app.vercel.app,http://localhost:5173
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
+
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true,
+};
+
 // ── Socket.IO ─────────────────────────────────────────────────────────────────
 const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-    credentials: true,
-  },
+  cors: corsOptions,
+  transports: ['websocket', 'polling'],
 });
 initSocket(io);
 app.set('io', io);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(helmet());
-app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-  credentials: true,
-}));
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
